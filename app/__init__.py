@@ -13,19 +13,11 @@ def create_app():
     app = Flask(__name__, template_folder="templates", static_folder="static")
 
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "farmlytics-secret-key-2024")
-
-    # Vercel has a read-only filesystem; use /tmp for writable paths
-    is_vercel = os.environ.get("VERCEL") == "1"
-    db_path = "/tmp/farmlytics.db" if is_vercel else os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "instance", "farmlytics.db"
-    )
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-        "DATABASE_URL", f"sqlite:///{db_path}"
+        "DATABASE_URL", "sqlite:///../instance/farmlytics.db"
     )
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["UPLOAD_FOLDER"] = "/tmp/farmlytics_uploads" if is_vercel else os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "uploads"
-    )
+    app.config["UPLOAD_FOLDER"] = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
     app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024  # 50 MB
 
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
