@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Reports – Farmlytics{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Reports</h1>
+    <p class="page-subtitle">Download and review pricing intelligence reports</p>
+  </div>
+</div>
+
+{% if not has_data %}
+<div class="empty-state">
+  <div class="empty-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+  </div>
+  <h2>No Report Available</h2>
+  <p>Upload an Excel file to generate a report.</p>
+  <a href="{{ url_for('upload.upload') }}" class="btn btn-primary">Upload Excel File</a>
+</div>
+{% else %}
+
+{% if recent_upload %}
+<div class="upload-info-bar mb-md">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  Report from: <strong>{{ recent_upload.original_name }}</strong> — uploaded {{ recent_upload.uploaded_at.strftime('%B %d, %Y') }}
+</div>
+{% endif %}
+
+<!-- Download Card -->
+<div class="reports-grid">
+  <div class="card report-card highlight">
+    <div class="report-icon green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </div>
+    <div class="report-body">
+      <h3>Full Analytics Report</h3>
+      <p>Complete Excel workbook with all 10 analysis sheets including price comparison, missing products, mismatch detection, and cigarette segregation.</p>
+      <div class="report-sheets">
+        <span class="sheet-tag">Summary</span>
+        <span class="sheet-tag">All_Products_List</span>
+        <span class="sheet-tag">With_Cigarettes</span>
+        <span class="sheet-tag">Without_Cigarettes</span>
+        <span class="sheet-tag">Price_Compare</span>
+        <span class="sheet-tag">Missing_Products</span>
+        <span class="sheet-tag">Missing_By_Store</span>
+        <span class="sheet-tag">Price_Mismatch</span>
+        <span class="sheet-tag">Top_Price_Differences</span>
+        <span class="sheet-tag">Price_Issues</span>
+      </div>
+      <a href="{{ url_for('api.download_report') }}" class="btn btn-primary btn-full mt-md" id="downloadReportBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Excel Report
+      </a>
+    </div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="card">
+    <div class="card-header"><h3>Report Summary</h3></div>
+    <div class="card-body">
+      <div class="summary-stats">
+        <div class="stat-row">
+          <span class="stat-label">Total Products</span>
+          <span class="stat-value">{{ summary.total_products }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Stores Analyzed</span>
+          <span class="stat-value">{{ summary.total_stores }}</span>
+        </div>
+        <div class="stat-row bordered">
+          <span class="stat-label">Products with Missing Entries</span>
+          <span class="stat-value red">{{ summary.total_missing }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Price Mismatches Detected</span>
+          <span class="stat-value yellow">{{ summary.total_mismatches }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Large Price Differences (&gt;$0.50)</span>
+          <span class="stat-value orange">{{ summary.total_large_diff }}</span>
+        </div>
+        <div class="stat-row mt-sm">
+          <span class="stat-label">Stores</span>
+          <span class="stat-value">
+            {% for s in store_names %}
+              <span class="badge badge-outline">{{ s }}</span>
+            {% endfor %}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Missing By Store Chart -->
+<div class="card mt-lg">
+  <div class="card-header">
+    <h3>Missing Products Per Store</h3>
+  </div>
+  <div class="chart-body-lg">
+    <canvas id="reportMissingChart"></canvas>
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if has_data %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  fetch('/api/missing-by-store')
+    .then(r => r.json())
+    .then(data => {
+      if (!data.length) return;
+      const ctx = document.getElementById('reportMissingChart').getContext('2d');
+      const theme = document.documentElement.getAttribute('data-theme');
+      const textColor = theme === 'dark' ? '#FFFFFF' : '#1A1A1A';
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.map(d => d.Store),
+          datasets: [{
+            label: 'Missing Products',
+            data: data.map(d => d.Missing_Products),
+            backgroundColor: '#FF6B6B',
+            borderRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { labels: { color: textColor } } },
+          scales: {
+            x: { ticks: { color: textColor }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: { ticks: { color: textColor }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          }
+        }
+      });
+    });
+</script>
+{% endif %}
+{% endblock %}

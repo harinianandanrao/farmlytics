@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Data Explorer – Farmlytics{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Data Explorer</h1>
+    <p class="page-subtitle">Drill down into pricing data across all stores</p>
+  </div>
+</div>
+
+{% if not has_data %}
+<div class="empty-state">
+  <div class="empty-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+  </div>
+  <h2>No Data Available</h2>
+  <p>Upload an Excel file to start exploring data.</p>
+  <a href="{{ url_for('upload.upload') }}" class="btn btn-primary">Upload Excel File</a>
+</div>
+{% else %}
+
+<!-- Tab Navigation -->
+<div class="tab-nav" role="tablist">
+  <button class="tab-btn active" data-tab="price-compare" role="tab">Price Comparison</button>
+  <button class="tab-btn" data-tab="missing" role="tab">Missing Products</button>
+  <button class="tab-btn" data-tab="mismatch" role="tab">Price Mismatch</button>
+  <button class="tab-btn" data-tab="cigarettes" role="tab">Cigarettes</button>
+  <button class="tab-btn" data-tab="no-cigarettes" role="tab">Non-Cigarettes</button>
+</div>
+
+<!-- Filters Bar -->
+<div class="filter-bar card">
+  <div class="filter-group">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;color:var(--text-muted)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="explorerSearch" placeholder="Search item name or number..." class="filter-input" />
+  </div>
+  <div class="filter-group">
+    <label>Department</label>
+    <select id="deptFilter" class="filter-select">
+      <option value="">All Departments</option>
+    </select>
+  </div>
+  <button class="btn btn-sm btn-ghost" id="clearFilters">Clear</button>
+</div>
+
+<!-- Price Compare Tab -->
+<div class="tab-panel active" id="tab-price-compare">
+  <div class="card">
+    <div class="card-header">
+      <h3>Price Comparison</h3>
+      <div class="subtab-nav">
+        <button class="subtab-btn active" data-subtab="all">All Products</button>
+        <button class="subtab-btn" data-subtab="cigs">With Cigarettes</button>
+        <button class="subtab-btn" data-subtab="no_cigs">Without Cigarettes</button>
+      </div>
+    </div>
+    <div class="table-wrapper">
+      <table class="data-table explorer-table" id="priceCompareTable">
+        <thead id="priceCompareHead">
+          <tr><th>Loading...</th></tr>
+        </thead>
+        <tbody id="priceCompareBody">
+          <tr><td class="loading-row">Loading data...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-footer" id="priceComparePager">
+      <div class="pager-info" id="pagerInfo"></div>
+      <div class="pager-controls">
+        <button class="btn btn-sm btn-ghost" id="prevPage" disabled>Previous</button>
+        <span id="pageIndicator"></span>
+        <button class="btn btn-sm btn-ghost" id="nextPage" disabled>Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Missing Products Tab -->
+<div class="tab-panel" id="tab-missing">
+  <div class="card">
+    <div class="card-header"><h3>Missing Products</h3></div>
+    <div class="table-wrapper">
+      <table class="data-table" id="missingTable">
+        <thead>
+          <tr>
+            <th>Item #</th>
+            <th>Product Name</th>
+            <th>Department</th>
+            <th>Missing In Stores</th>
+            <th>Count</th>
+          </tr>
+        </thead>
+        <tbody id="missingTableBody">
+          <tr><td colspan="5" class="loading-row">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Price Mismatch Tab -->
+<div class="tab-panel" id="tab-mismatch">
+  <div class="card">
+    <div class="card-header"><h3>Price Mismatches</h3></div>
+    <div class="table-wrapper">
+      <table class="data-table" id="mismatchTable">
+        <thead>
+          <tr>
+            <th>Item #</th>
+            <th>Product Name</th>
+            <th>Department</th>
+            <th>Prices by Store</th>
+            <th>Spread</th>
+            <th>Recommended</th>
+          </tr>
+        </thead>
+        <tbody id="mismatchTableBody">
+          <tr><td colspan="6" class="loading-row">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Cigarettes Tab -->
+<div class="tab-panel" id="tab-cigarettes">
+  <div class="card">
+    <div class="card-header"><h3>Cigarette Products</h3></div>
+    <div class="table-wrapper">
+      <table class="data-table explorer-table" id="cigsTable">
+        <thead id="cigsHead"><tr><th>Loading...</th></tr></thead>
+        <tbody id="cigsBody"><tr><td class="loading-row">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Non-Cigarettes Tab -->
+<div class="tab-panel" id="tab-no-cigarettes">
+  <div class="card">
+    <div class="card-header"><h3>Non-Cigarette Products</h3></div>
+    <div class="table-wrapper">
+      <table class="data-table explorer-table" id="noCigsTable">
+        <thead id="noCigsHead"><tr><th>Loading...</th></tr></thead>
+        <tbody id="noCigsBody"><tr><td class="loading-row">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/explorer.js') }}"></script>
+{% endblock %}

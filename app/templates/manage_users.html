@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Manage Users – Farmlytics{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">User Management</h1>
+    <p class="page-subtitle">Create and manage system users</p>
+  </div>
+  <button class="btn btn-primary" onclick="document.getElementById('createUserModal').style.display='flex'">
+    + Add User
+  </button>
+</div>
+
+<div class="card">
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td>{{ user.id }}</td>
+          <td>
+            <div class="user-cell">
+              <div class="avatar sm">{{ user.name[0].upper() }}</div>
+              {{ user.name }}
+            </div>
+          </td>
+          <td>{{ user.email }}</td>
+          <td><span class="badge {% if user.role == 'admin' %}badge-primary{% else %}badge-outline{% endif %}">{{ user.role.title() }}</span></td>
+          <td>{{ user.created_at.strftime('%b %d, %Y') }}</td>
+          <td>
+            {% if user.id != current_user.id %}
+            <form method="POST" action="{{ url_for('auth.delete_user', user_id=user.id) }}" onsubmit="return confirm('Delete user {{ user.name }}?')">
+              <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+            </form>
+            {% else %}
+            <span class="text-muted">You</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Create User Modal -->
+<div class="modal-overlay" id="createUserModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Create New User</h3>
+      <button class="modal-close" onclick="document.getElementById('createUserModal').style.display='none'">&times;</button>
+    </div>
+    <form method="POST" action="{{ url_for('auth.create_user') }}" class="modal-form">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" name="name" required placeholder="Jane Smith" class="form-input" />
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" name="email" required placeholder="jane@example.com" class="form-input" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" required placeholder="Min. 6 characters" class="form-input" minlength="6" />
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select name="role" class="form-select">
+          <option value="employee">Employee</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('createUserModal').style.display='none'">Cancel</button>
+        <button type="submit" class="btn btn-primary">Create User</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

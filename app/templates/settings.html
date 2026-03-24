@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Settings – Farmlytics{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Settings</h1>
+    <p class="page-subtitle">Manage your account and preferences</p>
+  </div>
+</div>
+
+<div class="settings-grid">
+  <div class="card">
+    <div class="card-header"><h3>Appearance</h3></div>
+    <div class="card-body">
+      <div class="setting-row">
+        <div>
+          <strong>Theme</strong>
+          <p>Switch between light and dark mode</p>
+        </div>
+        <div class="theme-switcher">
+          <button class="theme-opt" data-t="dark" id="darkOpt">Dark</button>
+          <button class="theme-opt" data-t="light" id="lightOpt">Light</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>Account</h3></div>
+    <div class="card-body">
+      <div class="profile-info-grid">
+        <div class="info-item">
+          <label>Full Name</label>
+          <p>{{ current_user.name }}</p>
+        </div>
+        <div class="info-item">
+          <label>Email</label>
+          <p>{{ current_user.email }}</p>
+        </div>
+        <div class="info-item">
+          <label>Role</label>
+          <p><span class="badge {% if current_user.is_admin() %}badge-primary{% else %}badge-outline{% endif %}">{{ current_user.role.title() }}</span></p>
+        </div>
+        <div class="info-item">
+          <label>Member Since</label>
+          <p>{{ current_user.created_at.strftime('%B %d, %Y') }}</p>
+        </div>
+      </div>
+      <a href="{{ url_for('auth.logout') }}" class="btn btn-danger mt-md">Logout</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>Analysis Settings</h3></div>
+    <div class="card-body">
+      <div class="setting-row">
+        <div>
+          <strong>Price Difference Threshold</strong>
+          <p>Products with spread above this value are flagged</p>
+        </div>
+        <div class="input-with-prefix">
+          <span>$</span>
+          <input type="number" value="0.50" step="0.10" min="0" class="form-input sm" id="thresholdInput" readonly />
+        </div>
+      </div>
+      <div class="setting-row mt-sm">
+        <div>
+          <strong>Cigarette Keyword</strong>
+          <p>Products containing this keyword in Dept_ID are segregated</p>
+        </div>
+        <input type="text" value="cigarett" class="form-input sm" readonly />
+      </div>
+      <p class="settings-note">These settings are configured at the system level. Contact your admin to change them.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Sync theme buttons with current theme
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+  document.querySelectorAll('.theme-opt').forEach(btn => {
+    if (btn.dataset.t === currentTheme) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      const t = btn.dataset.t;
+      document.documentElement.setAttribute('data-theme', t);
+      localStorage.setItem('farmlytics-theme', t);
+      document.querySelectorAll('.theme-opt').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+</script>
+{% endblock %}

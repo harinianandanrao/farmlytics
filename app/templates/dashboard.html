@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – Farmlytics{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Retail Price Intelligence Overview</p>
+  </div>
+  {% if has_data %}
+  <a href="{{ url_for('api.download_report') }}" class="btn btn-primary">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Download Report
+  </a>
+  {% endif %}
+</div>
+
+{% if not has_data %}
+<div class="empty-state">
+  <div class="empty-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+  </div>
+  <h2>No Data Loaded</h2>
+  <p>Upload an Excel file to start analyzing pricing data.</p>
+  <a href="{{ url_for('upload.upload') }}" class="btn btn-primary">Upload Excel File</a>
+</div>
+{% else %}
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-icon green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    </div>
+    <div class="kpi-body">
+      <span class="kpi-label">Total Products</span>
+      <span class="kpi-value" id="kpiProducts">{{ summary.total_products }}</span>
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-icon blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <div class="kpi-body">
+      <span class="kpi-label">Stores Analyzed</span>
+      <span class="kpi-value" id="kpiStores">{{ summary.total_stores }}</span>
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-icon red">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <div class="kpi-body">
+      <span class="kpi-label">Missing Products</span>
+      <span class="kpi-value" id="kpiMissing">{{ summary.total_missing }}</span>
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-icon yellow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <div class="kpi-body">
+      <span class="kpi-label">Price Mismatches</span>
+      <span class="kpi-value" id="kpiMismatch">{{ summary.total_mismatches }}</span>
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-icon orange">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    </div>
+    <div class="kpi-body">
+      <span class="kpi-label">Large Price Diffs</span>
+      <span class="kpi-value" id="kpiLargeDiff">{{ summary.total_large_diff }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row -->
+<div class="charts-grid">
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>Products Per Store</h3>
+      <span class="chart-badge">Coverage</span>
+    </div>
+    <div class="chart-body">
+      <canvas id="storeCoverageChart"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>Missing Products By Store</h3>
+      <span class="chart-badge">Gaps</span>
+    </div>
+    <div class="chart-body">
+      <canvas id="missingByStoreChart"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>Department Distribution</h3>
+      <span class="chart-badge">Top 10</span>
+    </div>
+    <div class="chart-body">
+      <canvas id="deptDistChart"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>Top Price Differences</h3>
+      <span class="chart-badge">Spread</span>
+    </div>
+    <div class="chart-body">
+      <canvas id="priceSpreadChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Missing Products Quick Table -->
+<div class="card mt-lg">
+  <div class="card-header">
+    <h3>Products with Issues</h3>
+    <a href="{{ url_for('dashboard.explorer') }}" class="btn btn-sm btn-ghost">View All</a>
+  </div>
+  <div class="table-wrapper">
+    <table class="data-table" id="issueTable">
+      <thead>
+        <tr>
+          <th>Item #</th>
+          <th>Product Name</th>
+          <th>Department</th>
+          <th>Missing In</th>
+          <th>Missing Count</th>
+        </tr>
+      </thead>
+      <tbody id="issueTableBody">
+        <tr><td colspan="5" class="loading-row">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if recent_upload %}
+<div class="upload-info-bar">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+  Last upload: <strong>{{ recent_upload.original_name }}</strong> on {{ recent_upload.uploaded_at.strftime('%b %d, %Y %H:%M') }}
+  by {{ recent_upload.uploader.name }}
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
