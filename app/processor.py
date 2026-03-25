@@ -134,9 +134,57 @@ def missing_by_store(merged: pd.DataFrame, store_names: List[str]) -> pd.DataFra
     return pd.DataFrame(records).sort_values("Missing_Products", ascending=False)
 
 
+def load_store_sheets_csv(filepath: str) -> Dict[str, pd.DataFrame]:
+    """Load CSV file. Must have columns: Store, ItemNum, ItemName, Dept_ID, Price."""
+    df = pd.read_csv(filepath)
+    df.columns = [str(c).strip() for c in df.columns]
+
+    col_map = {}
+    for col in df.columns:
+        low = col.lower().replace(" ", "").replace("_", "")
+        if low in ("itemnum", "barcode", "upc", "sku"):
+            col_map[col] = "ItemNum"
+        elif low == "itemname":
+            col_map[col] = "ItemName"
+        elif low in ("dept_id", "deptid", "dept", "department"):
+            col_map[col] = "Dept_ID"
+        elif low == "price":
+            col_map[col] = "Price"
+        elif low in ("store", "storename", "store_name"):
+            col_map[col] = "Store"
+
+    df = df.rename(columns=col_map)
+
+    required = {"ItemNum", "ItemName", "Dept_ID", "Price", "Store"}
+    if not required.issubset(set(df.columns)):
+        missing_cols = required - set(df.columns)
+        raise ValueError(
+            f"CSV missing required columns: {missing_cols}. "
+            "Expected headers: Store, ItemNum, ItemName, Dept_ID, Price"
+        )
+
+    df["ItemNum"] = df["ItemNum"].astype(str).str.strip()
+    df["ItemName"] = df["ItemName"].astype(str).str.strip()
+    df["Dept_ID"] = df["Dept_ID"].astype(str).str.strip()
+    df["Price"] = pd.to_numeric(df["Price"], errors="coerce")
+    df = df.dropna(subset=["ItemNum"])
+    df = df[df["ItemNum"] != "nan"]
+
+    stores = {}
+    for store_name, group in df.groupby("Store"):
+        store_df = group[["ItemNum", "ItemName", "Dept_ID", "Price"]].copy()
+        stores[str(store_name).strip()] = store_df.reset_index(drop=True)
+
+    return stores
+
+
 def process_excel(filepath: str) -> Dict:
     """Main processing pipeline. Returns all analytics results."""
-    stores = load_store_sheets(filepath)
+    ext = os.path.splitext(filepath)[1].lower()
+    if ext == ".csv":
+        stores = load_store_sheets_csv(filepath)
+    else:
+        stores = load_store_sheets(filepath)
     if not stores:
         raise ValueError("No valid store sheets found. Ensure sheets 2–N have ItemNum, ItemName, Dept_ID, Price columns.")
 

@@ -5,7 +5,7 @@
 <div class="page-header">
   <div>
     <h1 class="page-title">Upload Data</h1>
-    <p class="page-subtitle">Upload your consolidated Excel pricing file</p>
+    <p class="page-subtitle">Upload your consolidated Excel or CSV pricing file</p>
   </div>
 </div>
 
@@ -13,7 +13,7 @@
   <!-- Upload Card -->
   <div class="card upload-card">
     <div class="card-header">
-      <h3>Select Excel File</h3>
+      <h3>Select File</h3>
     </div>
     <div class="card-body">
       <form method="POST" action="{{ url_for('upload.upload') }}" enctype="multipart/form-data" id="uploadForm">
@@ -21,10 +21,10 @@
           <div class="drop-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           </div>
-          <p class="drop-text">Drag & drop your Excel file here</p>
+          <p class="drop-text">Drag & drop your file here</p>
           <p class="drop-hint">or click to browse files</p>
-          <p class="drop-formats">Supported: <strong>.xlsx</strong>, <strong>.xls</strong> — Max 50 MB</p>
-          <input type="file" name="file" id="fileInput" accept=".xlsx,.xls" class="file-input" />
+          <p class="drop-formats">Supported: <strong>.xlsx</strong>, <strong>.xls</strong>, <strong>.csv</strong> — Max 50 MB</p>
+          <input type="file" name="file" id="fileInput" accept=".xlsx,.xls,.csv" class="file-input" />
         </div>
 
         <div class="file-preview" id="filePreview" style="display:none">
@@ -85,7 +85,8 @@
           </div>
           <div>
             <strong>Required Columns</strong>
-            <p>Each store sheet must contain: <code>ItemNum</code>, <code>ItemName</code>, <code>Dept_ID</code>, <code>Price</code></p>
+            <p>Excel: each store sheet must have <code>ItemNum</code>, <code>ItemName</code>, <code>Dept_ID</code>, <code>Price</code></p>
+            <p style="margin-top:4px">CSV: flat file with <code>Store</code>, <code>ItemNum</code>, <code>ItemName</code>, <code>Dept_ID</code>, <code>Price</code></p>
           </div>
         </div>
         <div class="req-item">

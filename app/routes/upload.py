@@ -10,7 +10,7 @@ import json
 
 upload_bp = Blueprint("upload", __name__)
 
-ALLOWED_EXTENSIONS = {"xlsx", "xls"}
+ALLOWED_EXTENSIONS = {"xlsx", "xls", "csv"}
 
 
 def _allowed(filename):
@@ -31,7 +31,7 @@ def upload():
             return redirect(request.url)
 
         if not _allowed(file.filename):
-            flash("Only .xlsx and .xls files are accepted.", "danger")
+            flash("Only .xlsx, .xls, and .csv files are accepted.", "danger")
             return redirect(request.url)
 
         original_name = secure_filename(file.filename)

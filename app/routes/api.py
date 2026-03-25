@@ -238,11 +238,32 @@ def download_report():
         return jsonify({"error": "No data"}), 404
 
     report_bytes = generate_excel_report(results)
-    filename = session.get("last_upload_file", "report").split("_", 1)[-1].replace(".xlsx", "") + "_Farmlytics_Report.xlsx"
+    base = os.path.splitext(session.get("last_upload_file", "report").split("_", 1)[-1])[0]
+    filename = base + "_Farmlytics_Report.xlsx"
 
     return send_file(
         io.BytesIO(report_bytes),
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        as_attachment=True,
+        download_name=filename,
+    )
+
+
+@api_bp.route("/download-report-csv")
+@login_required
+def download_report_csv():
+    results = _get_results()
+    if not results:
+        return jsonify({"error": "No data"}), 404
+
+    merged = results["merged"]
+    csv_bytes = merged.to_csv(index=False).encode("utf-8")
+    base = os.path.splitext(session.get("last_upload_file", "report").split("_", 1)[-1])[0]
+    filename = base + "_Farmlytics_Report.csv"
+
+    return send_file(
+        io.BytesIO(csv_bytes),
+        mimetype="text/csv",
         as_attachment=True,
         download_name=filename,
     )
