@@ -13,14 +13,25 @@ def create_app():
     app = Flask(__name__, template_folder="templates", static_folder="static")
 
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "farmlytics-secret-key-2024")
+
+    # Render (and similar PaaS) has an ephemeral filesystem — use /tmp
+    if os.environ.get("RENDER"):
+        db_path = "/tmp/farmlytics.db"
+        upload_dir = "/tmp/uploads"
+    else:
+        base = os.path.dirname(os.path.dirname(__file__))
+        db_path = os.path.join(base, "instance", "farmlytics.db")
+        upload_dir = os.path.join(base, "uploads")
+
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    os.makedirs(upload_dir, exist_ok=True)
+
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-        "DATABASE_URL", "sqlite:///../instance/farmlytics.db"
+        "DATABASE_URL", f"sqlite:///{db_path}"
     )
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["UPLOAD_FOLDER"] = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+    app.config["UPLOAD_FOLDER"] = upload_dir
     app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024  # 50 MB
-
-    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
     db.init_app(app)
     bcrypt.init_app(app)

@@ -1,12 +1,15 @@
-# render.yaml – Render deployment configuration
 services:
   - type: web
     name: farmlytics
     runtime: python
+    region: oregon
+    plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn run:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    startCommand: gunicorn run:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --preload
     envVars:
       - key: SECRET_KEY
         generateValue: true
+      - key: RENDER
+        value: "true"
       - key: PYTHON_VERSION
         value: 3.11.0
