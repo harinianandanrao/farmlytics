@@ -50,30 +50,6 @@
       <a href="{{ url_for('auth.logout') }}" class="btn btn-danger mt-md">Logout</a>
     </div>
   </div>
-
-  <div class="card">
-    <div class="card-header"><h3>Analysis Settings</h3></div>
-    <div class="card-body">
-      <div class="setting-row">
-        <div>
-          <strong>Price Difference Threshold</strong>
-          <p>Products with spread above this value are flagged</p>
-        </div>
-        <div class="input-with-prefix">
-          <span>$</span>
-          <input type="number" value="0.50" step="0.10" min="0" class="form-input sm" id="thresholdInput" readonly />
-        </div>
-      </div>
-      <div class="setting-row mt-sm">
-        <div>
-          <strong>Cigarette Keyword</strong>
-          <p>Products containing this keyword in Dept_ID are segregated</p>
-        </div>
-        <input type="text" value="cigarett" class="form-input sm" readonly />
-      </div>
-      <p class="settings-note">These settings are configured at the system level. Contact your admin to change them.</p>
-    </div>
-  </div>
 </div>
 {% endblock %}
 

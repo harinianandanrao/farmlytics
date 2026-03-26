@@ -531,6 +531,12 @@ code {
   color: var(--text);
   line-height: 1.2;
 }
+.kpi-desc {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
 
 /* ---------- Charts Grid ---------- */
 .charts-grid {
@@ -818,6 +824,22 @@ code {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+}
+
+.auth-container.centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.auth-container.centered .auth-card {
+  width: 100%;
+  max-width: 440px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.25);
 }
 
 .auth-card {
