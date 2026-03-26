@@ -3,10 +3,12 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
+from flask_mail import Mail
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 login_manager = LoginManager()
+mail = Mail()
 
 
 def create_app():
@@ -33,8 +35,17 @@ def create_app():
     app.config["UPLOAD_FOLDER"] = upload_dir
     app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024  # 50 MB
 
+    # Flask-Mail configuration (set MAIL_* env vars in Render dashboard)
+    app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
+    app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", 587))
+    app.config["MAIL_USE_TLS"] = os.environ.get("MAIL_USE_TLS", "true").lower() == "true"
+    app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME", "")
+    app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD", "")
+    app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_USERNAME", "noreply@farmlytics.com")
+
     db.init_app(app)
     bcrypt.init_app(app)
+    mail.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
     login_manager.login_message_category = "info"
@@ -63,6 +74,7 @@ def _seed_admin():
             name="Admin",
             email="admin@farmlytics.com",
             role="admin",
+            is_verified=True,
         )
         admin.set_password("Admin@1234")
         db.session.add(admin)
